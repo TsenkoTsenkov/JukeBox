@@ -5,17 +5,8 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QApplication, QGridLayout, QLa
 from PyQt5.QtGui import QFont 
 import pygame
 
-'''
+
 credits = 0
-sampleMusic = 'TortureDance.mp3'
-
-def playMusic(self):
-
-    pygame.init()
-    pygame.mixer.init()
-    pygame.mixer.music.load(sampleMusic)
-    pygame.mixer.music.play()
-'''
 
 class MainWindow(QtWidgets.QWidget):
 
@@ -27,11 +18,16 @@ class MainWindow(QtWidgets.QWidget):
 
         layout = QtWidgets.QGridLayout()
 
-        self.button = QtWidgets.QPushButton('Main')
+        self.button = QtWidgets.QPushButton('Music')
         self.button.clicked.connect(self.switch)
         layout.addWidget(self.button)
 
+        self.button = QtWidgets.QPushButton('Quit')
+        self.button.clicked.connect(QApplication.instance().quit)
+        layout.addWidget(self.button)
+
         self.setLayout(layout)
+        self.setGeometry(300, 300, 300, 300)
 
     def switch(self):
         self.switch_window.emit()
@@ -44,18 +40,30 @@ class MusicWindow(QtWidgets.QWidget):
     def __init__(self):
         QtWidgets.QWidget.__init__(self)
         self.setWindowTitle('Music')
+        self.sampleMusic = 'TortureDance.mp3'
 
         layout = QtWidgets.QGridLayout()
 
-        self.button = QtWidgets.QPushButton('Music')
+        self.button = QtWidgets.QPushButton('BackToMain')
         self.button.clicked.connect(self.music)
+        layout.addWidget(self.button)
+
+        self.button = QtWidgets.QPushButton('PlayMusic')
+        self.button.clicked.connect(self.playMusic)
 
         layout.addWidget(self.button)
 
         self.setLayout(layout)
+        self.setGeometry(300, 300, 300, 300)
 
     def music(self):
         self.switch_window.emit()
+    
+    def playMusic(self):
+        pygame.init()
+        pygame.mixer.init()
+        pygame.mixer.music.load(self.sampleMusic)
+        pygame.mixer.music.play()
 
 
 class Controller:
