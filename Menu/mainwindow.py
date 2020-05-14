@@ -1,67 +1,47 @@
 import sys
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QPushButton, QStackedWidget, QApplication, QGridLayout, QLabel, QHBoxLayout, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QPushButton, QDialog, QMessageBox, QStackedWidget, QScrollArea, QGroupBox, QFormLayout, QApplication, QGridLayout, QLabel, QHBoxLayout, QVBoxLayout
 from PyQt5.QtGui import QFont, QIcon, QPixmap
+from PyQt5.QtCore import QTimer
 import pygame
 
-credits = 0
-
-class MainWindow(QtWidgets.QWidget):
-
-    switch_window = QtCore.pyqtSignal()
-
-    def __init__(self):
-        QtWidgets.QWidget.__init__(self)
-        self.setWindowTitle('Main Window')
-
-        layout = QtWidgets.QGridLayout()
-
-        self.button = QtWidgets.QPushButton('Music')
-        self.button.clicked.connect(self.switch)
-        layout.addWidget(self.button)
-
-        self.button = QtWidgets.QPushButton('Quit')
-        self.button.clicked.connect(QApplication.instance().quit)
-        layout.addWidget(self.button)
-
-        self.setLayout(layout)
-        self.setGeometry(300, 300, 300, 300)
-
-    def switch(self):
-        self.switch_window.emit()
+credits = 1
 
 class MusicWindow(QtWidgets.QWidget):
 
-    switch_window = QtCore.pyqtSignal()
-
     def __init__(self):
+        pygame.init()
+        pygame.mixer.init()
         QtWidgets.QWidget.__init__(self)
         self.setWindowTitle('Music')
 
-        layout = QVBoxLayout()
+        groupBox = QGroupBox()
+        layout = QHBoxLayout()
 
-        self.text = "Credits: {0}".format(credits)
-        self.label = QLabel(self.text, self)
-        self.label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        layout.addWidget(self.label)
-
-        self.Stack = QStackedWidget()
-        self.Stack.addWidget(MusicImageWidget('CanzoniPreferite.jpeg', "Canzoni Preferite", 'Daisuke Hasegawa'))
-
-        layout.addWidget(self.Stack)
-
-        self.button = QtWidgets.QPushButton('BackToMain')
-        self.button.clicked.connect(self.music)
-        layout.addWidget(self.button)
-
+        layout.addWidget(MusicImageWidget('CanzoniPreferite.jpeg', "Canzoni Preferite", 'Daisuke Hasegawa'))
+        layout.addWidget(MusicImageWidget('FightingGold.png', 'Fighting Gold', 'Coda'))
+        layout.addWidget(MusicImageWidget('CanzoniPreferite.jpeg', "Canzoni Preferite", 'Daisuke Hasegawa'))
+        layout.addWidget(MusicImageWidget('CanzoniPreferite.jpeg', "Canzoni Preferite", 'Daisuke Hasegawa'))
+        layout.addWidget(MusicImageWidget('CanzoniPreferite.jpeg', "Canzoni Preferite", 'Daisuke Hasegawa'))
         layout.addStretch(1)
 
-        self.setLayout(layout)
-        self.setGeometry(300, 300, 800, 480)
+        groupBox.setLayout(layout)
+        scroll = QScrollArea()
+        scroll.setWidget(groupBox)
+        scroll.setWidgetResizable(True)
+        scroll.setFixedHeight(230)
 
-    def music(self):
-        self.switch_window.emit()
+        lay = QVBoxLayout(self)
+        lay.addWidget(scroll)
+
+        self.button = QtWidgets.QPushButton('Quit')
+        self.button.clicked.connect(QApplication.instance().quit)
+        lay.addWidget(self.button)
+        
+        self.setLayout(lay)
+        self.setGeometry(0, 2, 800, 480)
+        self.show()
 
 class MusicImageWidget(QWidget):
 
@@ -71,11 +51,13 @@ class MusicImageWidget(QWidget):
         self.artistName = artistName
 
         QWidget.__init__(self, parent=parent)
+        
         lay = QVBoxLayout(self)
         self.button = QPushButton()
         self.button.setIcon(QIcon(QPixmap(icon)))
         self.button.setIconSize(QtCore.QSize(100, 100))
         self.button.clicked.connect(lambda : self.playMusic(self.songName))
+        
         lay.addWidget(self.button)
 
         self.text = "{0}".format(self.songName)
@@ -88,34 +70,24 @@ class MusicImageWidget(QWidget):
         self.label.setFont(QFont("Helvetica", 10))
         lay.addWidget(self.label)
 
+        lay.addStretch(1)
+
     def playMusic(self, songName):
-        pygame.init()
-        pygame.mixer.init()
-        pygame.mixer.music.load(songName.replace(" ", "") + '.mp3')
-        pygame.mixer.music.play()
+        global credits
+        if pygame.mixer.get_busy():
+            QMessageBox.about(self, "Error", "You have to wait for your song")
 
-class Controller:
-
-    def __init__(self):
-        self.music = MusicWindow()
-
-    def show_music(self):
-        self.window.close()
-        self.music.switch_window.connect(self.show_main)
-        self.music.show()
-
-    def show_main(self):
-        self.music.close()
-        self.window = MainWindow()
-        self.window.switch_window.connect(self.show_music)
-        self.window.show()
+        elif credits > 0:
+            pygame.mixer.music.load(songName.replace(" ", "") + '.mp3')
+            pygame.mixer.music.play()
+            credits = credits - 1
+        else:
+            QMessageBox.about(self, "Error", "Insert a token")
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
-    controller = Controller()
-    controller.show_main()
+    jukeBox = MusicWindow()
     sys.exit(app.exec_())
-
 
 if __name__ == '__main__':
     main()
